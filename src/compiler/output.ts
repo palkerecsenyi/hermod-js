@@ -32,13 +32,13 @@ export function writeFileOutput(outDir: string, fileRef: file, config: Config, c
         },
         importStar(from: string, relative: boolean, as: string) {
             if (!relative) {
-                from = importBase + from
+                from = importBase + '/' + from
             }
             this._imports[from] = ['*', as]
         },
         importModule(from: string, relative: boolean, ...module: string[]) {
             if (!relative) {
-                from = importBase + from
+                from = importBase + '/' + from
             }
 
             if (Object.keys(this._imports).includes(from)) {

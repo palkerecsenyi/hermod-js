@@ -25,7 +25,7 @@ export function resolveTypeName(w: Writer, type: string | undefined, currentFile
         if (native) {
             return hermodTypeToTsType(type as FieldType)
         } else {
-            w.importModule("src/encoder/encoder", false, "FieldType")
+            w.importModule("dist/encoder/encoder", false, "FieldType")
             return `'${type}' as FieldType`
         }
     } else {
