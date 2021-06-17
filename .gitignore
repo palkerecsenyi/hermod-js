@@ -1,3 +1,7 @@
 node_modules/*
 .idea/*
 dist/*
+*.hermod.yaml
+*.hermod.js
+*.hermod.ts
+*.hermod.d.ts

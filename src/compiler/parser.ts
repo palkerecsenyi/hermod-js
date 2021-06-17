@@ -3,10 +3,7 @@ import YAML from 'yaml'
 import * as fs from 'fs'
 import path from 'path'
 import { Unit } from '../encoder/encoder';
-
-export interface Service {
-
-}
+import { Service } from '../service/request';
 
 export interface Config {
     fileName: string // only defined during compilation

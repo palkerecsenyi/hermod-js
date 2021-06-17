@@ -1,4 +1,4 @@
-import { FieldType } from '../encoder/encoder';
+import { FieldType, Unit } from '../encoder/encoder';
 import { Config } from './parser';
 import { Writer } from './output';
 import camelcase from 'camelcase';
@@ -19,9 +19,9 @@ export function hermodTypeToTsType(t: FieldType): string {
     throw new Error(`cannot find TS type for Hermod type ${t}`)
 }
 
-export function resolveTypeName(w: Writer, type: string | undefined, currentFileName: string, configs: Config[], native = false): string {
+export function resolveTypeName(w: Writer, type: string | undefined, currentFileName: string, configs: Config[], native = false, onlyUnits = false): string {
     type = type ?? FieldType.String
-    if (Object.values(FieldType).includes(type as FieldType)) {
+    if (Object.values(FieldType).includes(type as FieldType) && !onlyUnits) {
         if (native) {
             return hermodTypeToTsType(type as FieldType)
         } else {
@@ -30,15 +30,8 @@ export function resolveTypeName(w: Writer, type: string | undefined, currentFile
         }
     } else {
         const unitName = camelcase(type, {pascalCase: true})
-        let unitFileName: string | null = null
 
-        for (const config of configs) {
-            const matchingUnit = config.units.find(e => camelcase(e.name, {pascalCase: true}) === unitName)
-            if (matchingUnit != null) {
-                unitFileName = config.fileName.replace('.hermod.yaml', '')
-                break
-            }
-        }
+        const [,unitFileName] = resolveUnitDefinition(unitName, configs)
 
         if (unitFileName === null) {
             throw new Error(`couldn't find type ${type}`)
@@ -54,4 +47,15 @@ export function resolveTypeName(w: Writer, type: string | undefined, currentFile
 
         return unitName
     }
+}
+
+export function resolveUnitDefinition(unitName: string, configs: Config[]): [Unit | undefined, string | undefined] {
+    for (const config of configs) {
+        const matchingUnit = config.units.find(e => camelcase(e.name, {pascalCase: true}) === unitName)
+        if (matchingUnit != null) {
+            return [matchingUnit, config.fileName.replace('.hermod.yaml', '.hermod')]
+        }
+    }
+
+    return [undefined, undefined]
 }

@@ -8,6 +8,19 @@ export default class Uint8List {
         this._readIndex = 0
     }
 
+    static fromArrayBuffer(ab: ArrayBuffer): Uint8List {
+        const uint8 = new Uint8Array(ab)
+        const list = new Uint8List()
+        list._contents.push(...uint8)
+        return list
+    }
+
+    static fromString(str: string): Uint8List {
+        const list = new Uint8List()
+        list.pushString(str)
+        return list
+    }
+
     get uint8Array(): Uint8Array {
         return new Uint8Array(this._contents)
     }

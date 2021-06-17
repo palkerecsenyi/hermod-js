@@ -33,7 +33,7 @@ function createFilledUnit(ufhu: UserFacingHermodUnit, definition: Unit): FilledU
     }
 }
 
-function encodeUFHU(ufhu: UserFacingHermodUnit, definition: Unit): Uint8List {
+export function encodeUFHU(ufhu: UserFacingHermodUnit, definition: Unit): Uint8List {
     const filledUnit = createFilledUnit(ufhu, definition)
     return encode(filledUnit)
 }
@@ -54,7 +54,7 @@ function buildUFHUFromFilledUnit(filledUnit: FilledUnit, definition: Unit): User
     }
 }
 
-function decodeUFHU(data: Uint8List, definition: Unit): UserFacingHermodUnit {
+export function decodeUFHU(data: Uint8List, definition: Unit): UserFacingHermodUnit {
     const decodedData = decode(definition, data)
     return buildUFHUFromFilledUnit(decodedData, definition)
 }
