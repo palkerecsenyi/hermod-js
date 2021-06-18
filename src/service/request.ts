@@ -22,6 +22,13 @@ export interface ServerConfig {
     secure: boolean
 }
 
+export class GlobalConfig {
+    static config: ServerConfig
+    static set(newConfig: ServerConfig) {
+        this.config = newConfig
+    }
+}
+
 export function openRequest(config: ServerConfig, path: string): IsomorphicWebSocket {
     const finalUrl = `${config.secure ? 'ws' : 'wss'}://${config.hostname}:${config.port}${path}`
     return new IsomorphicWebSocket(finalUrl)

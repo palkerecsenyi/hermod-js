@@ -1,15 +1,20 @@
 import { Unit } from '../encoder/encoder';
 import { decodeUFHU, encodeUFHU, UserFacingHermodUnit } from '../encoder/user';
 import IsomorphicWebSocket from './websocket';
+import { GlobalConfig, openRequest, ServerConfig } from './request';
 
 export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefined = undefined, Out extends UserFacingHermodUnit | undefined = undefined> {
     private readonly in: Unit | undefined
     private readonly out: Unit | undefined
     private readonly client: IsomorphicWebSocket
-    constructor(client: IsomorphicWebSocket, inDefinition?: Unit, outDefinition?: Unit) {
+    constructor(path: string, serverConfig?: ServerConfig, inDefinition?: Unit, outDefinition?: Unit) {
         this.in = inDefinition
         this.out = outDefinition
-        this.client = client
+
+        if (!serverConfig && !GlobalConfig.config) {
+            throw new Error("Global server config not found. Use GlobalConfig.set() to set one _before_ calling any Hermod requests.")
+        }
+        this.client = openRequest(serverConfig ?? GlobalConfig.config, path)
     }
 
     close() {
