@@ -29,13 +29,13 @@ export default function writeService(w: Writer, service: Service, fileName: stri
     for (const endpoint of service.endpoints) {
         const apiPathName = camelcase(endpoint.path.split('/').reverse().join('_'), {pascalCase: true})
 
-        w.importDefault('dist/service/request', false, 'ServerConfig')
+        w.importModule('dist/service/router', false, 'WebSocketRouter')
         w.importDefault('dist/service/readwriter', false, 'ServiceReadWriter')
 
         const inTypeName = getUnitTypeName(endpoint.in, w, fileName, configs)
         const outTypeName = getUnitTypeName(endpoint.out, w, fileName, configs)
-        w.writeln(`export function request${apiPathName}(serverConfig?: ServerConfig): ServiceReadWriter<${inTypeName}, ${outTypeName}> {`)
-        w.writelni(1, `return new ServiceReadWriter<${inTypeName}, ${outTypeName}>('${endpoint.path}', serverConfig, `)
+        w.writeln(`export function request${apiPathName}(router?: WebSocketRouter): ServiceReadWriter<${inTypeName}, ${outTypeName}> {`)
+        w.writelni(1, `return new ServiceReadWriter<${inTypeName}, ${outTypeName}>(${endpoint.id}, router, `)
         writeNullableUnitDefinition(w, endpoint.in, configs, fileName)
         w.write(',')
         writeNullableUnitDefinition(w, endpoint.out, configs, fileName)

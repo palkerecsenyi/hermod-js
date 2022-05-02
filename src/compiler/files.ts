@@ -31,7 +31,7 @@ function getYamlFilesInDirectory(dir: string): file[] {
     return files
 }
 
-export default function compileFiles(inDir: string, outDir: string, importBase: string) {
+export default function compileFiles(inDir: string, outDir: string, importBase: string, compile: boolean) {
     if (inDir == null || outDir == null) {
         console.error("No inDir/outDir provided!")
         process.exit(1)
@@ -46,6 +46,6 @@ export default function compileFiles(inDir: string, outDir: string, importBase: 
     })
 
     for (const configPair of configs) {
-        writeFileOutput(outDir, configPair.file, configPair.config, configs.map(e => e.config), importBase)
+        writeFileOutput(outDir, configPair.file, configPair.config, configs.map(e => e.config), importBase, compile)
     }
 }

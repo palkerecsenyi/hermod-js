@@ -34,8 +34,25 @@ export default class Uint8List {
         return this.size === 0
     }
 
+    /**
+     * Move forwards/backwards in the list. Negative numbers move backwards.
+     * @param n number of bytes (+ve/-ve) to move
+     */
+    seek(n: number) {
+        const resultantPosition = this._readIndex + n
+        if (resultantPosition < 0 || resultantPosition > this._contents.length - 1) {
+            throw new Error("Cannot seek past start/end of Uint8List")
+        }
+
+        this._readIndex += n
+    }
+
     merge(l: Uint8List) {
         this._contents.push(...l._contents)
+    }
+
+    mergeStart(l: Uint8List) {
+        this._contents.unshift(...l._contents)
     }
 
     mergeWithSizeMarker(l: Uint8List, extended: boolean) {
@@ -58,7 +75,7 @@ export default class Uint8List {
     }
 
     private pushN(n: 16 | 32 | 64, value: number) {
-        if (value < 0 || value > (Math.pow(2, 16) - 1)) {
+        if (value < 0 || value > (Math.pow(2, n) - 1)) {
             throw new Error("value out of range")
         }
 

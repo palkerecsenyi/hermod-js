@@ -19,7 +19,14 @@ export function hermodTypeToTsType(t: FieldType): string {
     throw new Error(`cannot find TS type for Hermod type ${t}`)
 }
 
-export function resolveTypeName(w: Writer, type: string | undefined, currentFileName: string, configs: Config[], native = false, onlyUnits = false): string {
+export function resolveTypeName(
+    w: Writer,
+    type: string | undefined,
+    currentFileName: string,
+    configs: Config[],
+    native = false,
+    onlyUnits = false,
+): string {
     type = type ?? FieldType.String
     if (Object.values(FieldType).includes(type as FieldType) && !onlyUnits) {
         if (native) {
@@ -49,10 +56,17 @@ export function resolveTypeName(w: Writer, type: string | undefined, currentFile
     }
 }
 
-export function resolveUnitDefinition(unitName: string, configs: Config[]): [Unit | undefined, string | undefined] {
+export function resolveUnitDefinition(
+    unitName: string,
+    configs: Config[]
+): [Unit | undefined, string | undefined] {
     for (const config of configs) {
+        if (!config.units) {
+            continue
+        }
+
         const matchingUnit = config.units.find(e => camelcase(e.name, {pascalCase: true}) === unitName)
-        if (matchingUnit != null) {
+        if (matchingUnit) {
             return [matchingUnit, config.fileName.replace('.hermod.yaml', '.hermod')]
         }
     }

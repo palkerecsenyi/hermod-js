@@ -5,3 +5,4 @@ dist/*
 *.hermod.js
 *.hermod.ts
 *.hermod.d.ts
+*.log

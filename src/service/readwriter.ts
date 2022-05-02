@@ -1,36 +1,64 @@
 import { Unit } from '../encoder/encoder';
 import { decodeUFHU, encodeUFHU, UserFacingHermodUnit } from '../encoder/user';
-import IsomorphicWebSocket from './websocket';
-import { GlobalConfig, openRequest, ServerConfig } from './request';
+import { GlobalServer } from './request';
+import { WebSocketRoute, WebSocketRouter } from './router'
 
 export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefined = undefined, Out extends UserFacingHermodUnit | undefined = undefined> {
     private readonly in: Unit | undefined
     private readonly out: Unit | undefined
-    private readonly client: IsomorphicWebSocket
-    constructor(path: string, serverConfig?: ServerConfig, inDefinition?: Unit, outDefinition?: Unit) {
+    private readonly client: WebSocketRoute
+    constructor(
+        id: number,
+        router?: WebSocketRouter,
+        inDefinition?: Unit,
+        outDefinition?: Unit,
+    ) {
         this.in = inDefinition
         this.out = outDefinition
 
-        if (!serverConfig && !GlobalConfig.config) {
-            throw new Error("Global server config not found. Use GlobalConfig.set() to set one _before_ calling any Hermod requests.")
+        if (!router && !GlobalServer.connection) {
+            throw new Error("GlobalServer router not found. Use GlobalServer.set() to set one or pass the optional `router` parameter.")
         }
-        this.client = openRequest(serverConfig ?? GlobalConfig.config, path)
+
+        const selectedRouter = router ?? GlobalServer.connection
+        this.client = selectedRouter.getRoute(id)
     }
 
     close() {
         this.client.close()
     }
 
-    async *read(): AsyncGenerator<Out, void, void> {
-        if (this.in === undefined) throw new Error("function doesn't return any arguments")
-        for await (const rawData of this.client.message()) {
-            yield decodeUFHU(rawData, this.in) as Out
+    private async open() {
+        if (!this.client.isOpen) {
+            await this.client.open()
         }
     }
 
+    async *read(): AsyncGenerator<Out, void, void> {
+        if (this.out === undefined) throw new Error("function doesn't return any arguments")
+
+        await this.open()
+        for await (const rawData of this.client.receive()) {
+            yield decodeUFHU(rawData, this.out) as Out
+        }
+    }
+
+    async readNext(): Promise<Out> {
+        if (this.out === undefined) throw new Error("function doesn't return any arguments")
+
+        await this.open()
+        const rawData = await this.client.receive().next()
+        if (!rawData.value) {
+            throw new Error("connection got closed")
+        }
+        return decodeUFHU(rawData.value, this.out) as Out
+    }
+
     async send(data: In): Promise<void> {
-        if (this.out === undefined) throw new Error("function doesn't take any arguments")
-        const encodedData = encodeUFHU(data as UserFacingHermodUnit, this.out)
+        if (this.in === undefined) throw new Error("function doesn't take any arguments")
+
+        await this.open()
+        const encodedData = encodeUFHU(data as UserFacingHermodUnit, this.in)
         this.client.send(encodedData)
     }
 }

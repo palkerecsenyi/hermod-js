@@ -8,8 +8,8 @@ import { Service } from '../service/request';
 export interface Config {
     fileName: string // only defined during compilation
     package: string
-    units: Unit[]
-    services: Service[]
+    units?: Unit[]
+    services?: Service[]
 }
 
 export default function parseYamlFile(fileRef: file): Config {

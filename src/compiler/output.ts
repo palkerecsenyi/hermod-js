@@ -3,8 +3,10 @@ import { Config } from './parser'
 import writeUnit from './unit';
 import * as fs from 'fs';
 import path from 'path';
-import {createProgram, ModuleKind, ScriptTarget} from 'typescript'
+import typescript from 'typescript'
 import writeService from './service';
+
+const { createProgram, ModuleKind, ScriptTarget } = typescript
 
 export interface Writer {
     _lines: string[]
@@ -19,7 +21,14 @@ export interface Writer {
     importDefault(from: string, relative: boolean, name: string): void
 }
 
-export function writeFileOutput(outDir: string, fileRef: file, config: Config, configs: Config[], importBase: string) {
+export function writeFileOutput(
+    outDir: string,
+    fileRef: file,
+    config: Config,
+    configs: Config[],
+    importBase: string,
+    compile: boolean
+) {
     const fileName = fileRef.name.replace('.hermod.yaml', '.hermod')
     const w: Writer = {
         _lines: [],
@@ -73,12 +82,16 @@ export function writeFileOutput(outDir: string, fileRef: file, config: Config, c
         }
     }
 
-    for (const unit of config.units) {
-        writeUnit(w, unit, fileName, configs)
+    if (config.units) {
+        for (const unit of config.units) {
+            writeUnit(w, unit, fileName, configs)
+        }
     }
 
-    for (const service of config.services) {
-        writeService(w, service, fileName, configs)
+    if (config.services) {
+        for (const service of config.services) {
+            writeService(w, service, fileName, configs)
+        }
     }
 
     let text = ''
@@ -99,14 +112,17 @@ export function writeFileOutput(outDir: string, fileRef: file, config: Config, c
     text += w._lines.join('\n')
     const joinedFileName = path.join(outDir, fileName + '.ts')
     fs.writeFileSync(joinedFileName, text)
-    const program = createProgram([joinedFileName], {
-        module: ModuleKind.CommonJS,
-        target: ScriptTarget.ES5,
-        declaration: true,
-        noResolve: true,
-        removeComments: false,
-    })
 
-    program.emit()
-    fs.unlinkSync(joinedFileName)
+    if (compile) {
+        const program = createProgram([joinedFileName], {
+            module: ModuleKind.CommonJS,
+            target: ScriptTarget.ES5,
+            declaration: true,
+            noResolve: true,
+            removeComments: false,
+        })
+
+        program.emit()
+        fs.unlinkSync(joinedFileName)
+    }
 }
