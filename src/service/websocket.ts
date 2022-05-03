@@ -55,7 +55,11 @@ export default class IsomorphicWebSocket {
 
             const failHandler = (e: NodeWebSocket.ErrorEvent | Event) => {
                 removeListeners()
-                reject(new Error("Connection to the server failed"))
+                if ('error' in e) {
+                    reject(new Error(e.error))
+                } else {
+                    reject(new Error("Couldn't open WebSocket connection: Connection to server failed."))
+                }
             }
 
             if (this.webWs) {
