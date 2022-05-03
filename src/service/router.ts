@@ -1,5 +1,6 @@
 import IsomorphicWebSocket from './websocket'
 import Uint8List from '../encoder/uint8list'
+import IncomingMessageQueue from './queue'
 
 /**
  * WebSocketRouter uses a single WebSocket channel to transmit requests and responses
@@ -27,11 +28,13 @@ export class WebSocketRouter {
 }
 
 enum MessageFlags {
-    Data = 0b10101010,
-    ClientSessionRequest = 0b00001111,
-    ServerSessionAck = 0b11110000,
-    Close = 0b11111111,
-    CloseAck = 0b11111110
+    Data = 0,
+    ClientSessionRequest = 1,
+    ServerSessionAck = 2,
+    Close = 3,
+    CloseAck = 4,
+    ErrorClientID = 5,
+    ErrorSessionID = 6,
 }
 
 export class WebSocketRoute {
@@ -39,7 +42,9 @@ export class WebSocketRoute {
     private readonly endpointId: number
     private sessionId: number | undefined
     private readonly clientId: number
-    private static nextClientId = 0x00000000
+    private static usedClientIds: number[] = []
+    private readonly messageQueue: IncomingMessageQueue<Uint8List | boolean>
+    private readonly cancelSubscription: () => void
     constructor(router: WebSocketRouter, id: number) {
         this.router = router
 
@@ -49,12 +54,35 @@ export class WebSocketRoute {
         }
         this.endpointId = id
 
-        this.clientId = WebSocketRoute.nextClientId
-        if (WebSocketRoute.nextClientId + 1 >= 0xffffffff) {
-            WebSocketRoute.nextClientId = 0x00000000
-        } else {
-            WebSocketRoute.nextClientId++
+        this.clientId = 0
+        for (let i = 0; i <= 0xffffffff; i++) {
+            if (!WebSocketRoute.usedClientIds.includes(i)) {
+                this.clientId = i
+                break
+            }
+
+            if (i + 1 > 0xffffffff) {
+                throw new Error("no more client IDs left")
+            }
         }
+        WebSocketRoute.usedClientIds.push(this.clientId)
+
+        this.messageQueue = new IncomingMessageQueue()
+        this.cancelSubscription = this.router.webSocket.listen((open, data, error) => {
+            if (!open) {
+                this.cancelSubscription()
+                this.messageQueue.newMessage(false)
+                return
+            }
+
+            if (error) {
+                throw new Error(error)
+            }
+
+            if (data) {
+                this.messageQueue.newMessage(data)
+            }
+        })
     }
 
     get isOpen() {
@@ -64,13 +92,13 @@ export class WebSocketRoute {
     /**
      * Session establishment messages have a slightly different format:
      *
-     * | Endpoint ID (16 bits) | Request flag (8 bits) = 00001111 | Client ID (32 bits) |
+     * | Endpoint ID (16 bits) | Request flag (8 bits) = MessageFlags.ClientSessionRequest | Client ID (32 bits) |
      *
      * The server will send the client ID back as-is so the client can identify which session establishment request
      * it's responding too. However, this won't be the session ID — the server will generate that and include it
      * in the response as follows:
      *
-     * | Endpoint ID (16 bits) | Request flag (8 bits) = 11110000 | Client ID (32 bits) | Session ID (32 bits) |
+     * | Endpoint ID (16 bits) | Request flag (8 bits) = MessageFlags.ServerSessionAck | Client ID (32 bits) | Session ID (32 bits) |
      */
     async open() {
         const openMessageList = new Uint8List()
@@ -79,19 +107,22 @@ export class WebSocketRoute {
         openMessageList.push32(this.clientId)
         this.router.webSocket.send(openMessageList)
 
-        const response = await Promise.race([
-            this.receiveSessionAcknowledgement(),
-            new Promise<number>(resolve => {
+        const promises: Promise<number>[] = [this.receiveSessionAcknowledgement()]
+        if (this.router.connectionTimeout !== 0) {
+            promises.push(new Promise<number>(resolve => {
                 setTimeout(() => {
                     resolve(-1)
                 }, this.router.connectionTimeout)
-            }),
-        ])
+            }))
+        }
+        const response = await Promise.race(promises)
 
         if (response === -1) {
             throw new Error("Session establishment timed out")
         }
 
+        const usedIdIndex = WebSocketRoute.usedClientIds.indexOf(this.clientId)
+        WebSocketRoute.usedClientIds.splice(usedIdIndex, 1)
         this.sessionId = response
     }
 
@@ -99,8 +130,9 @@ export class WebSocketRoute {
      * Format for messages:
      * | Endpoint ID (16 bits) | Request flag (8 bits) | Session ID (32 bits) | Encoded Unit |
      *
-     * Request flag is 11111111 to indicate the end of the transmission, 00001111 to request to open a new session,
-     * 11110000 for the server to acknowledge a new session, and 00000000 for all normal transmissions
+     * Format for errors:
+     * | Endpoint ID (16 bits) | Request flag (8 bits) = MessageFlags.Error[ClientID][SessionID] | Session ID or Client ID (32 bits) | Binary-encoded string error message
+     *
      * @param data Uint8List-format data to send, excluding endpoint ID/end flag
      */
     send(data: Uint8List) {
@@ -138,10 +170,18 @@ export class WebSocketRoute {
             throw new Error("Session not open, cannot receive messages (other than session acknowledgements)!")
         }
 
-        for await (const message of this.router.webSocket.message()) {
+        let connectionOpen = true
+        while (connectionOpen) {
+            const message = await this.messageQueue.next()
+            if (message === false) {
+                connectionOpen = false
+                continue
+            } else if (typeof message === 'boolean') {
+                continue
+            }
+
             const endpointId = message.read16()
             if (endpointId !== this.endpointId) {
-                message.seek(-2)
                 continue
             }
 
@@ -152,6 +192,19 @@ export class WebSocketRoute {
                 } else {
                     continue
                 }
+            }
+
+            if (requestFlag === MessageFlags.ErrorClientID || requestFlag === MessageFlags.ErrorSessionID) {
+                const sessionOrClientId = message.read32()
+                if (requestFlag === MessageFlags.ErrorClientID && this.clientId !== sessionOrClientId) {
+                    continue
+                }
+                if (requestFlag === MessageFlags.ErrorSessionID && this.sessionId !== sessionOrClientId) {
+                    continue
+                }
+
+                const errorMessage = message.sliceToEnd().toString()
+                throw new Error("ServerError: " + errorMessage)
             }
 
             const sessionId = message.read32()
@@ -190,5 +243,7 @@ export class WebSocketRoute {
         emptyMessageFrameList.push8(MessageFlags.Close)
         emptyMessageFrameList.push32(this.sessionId)
         this.router.webSocket.send(emptyMessageFrameList)
+
+        this.cancelSubscription()
     }
 }

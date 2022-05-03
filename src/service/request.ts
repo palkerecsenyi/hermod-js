@@ -34,6 +34,7 @@ export interface ServerConfig {
 
     /**
      * How long to wait to establish a session within an existing WS connection (millis)
+     * 0 will disable the timeout
      */
     timeout: number
 }
@@ -53,5 +54,13 @@ export class GlobalServer {
         const finalUrl = `${this.config.secure ? 'wss' : 'ws'}://${this.config.hostname}:${this.config.port}${this.config.path}`
         this.connection = new WebSocketRouter(finalUrl, this.config.timeout)
         await this.connection.waitForConnection()
+    }
+
+    static close() {
+        if (!this.connection || !this.connection.webSocket.isReady) {
+            throw new Error("WebSocket connection not open")
+        }
+
+        this.connection.webSocket.close()
     }
 }

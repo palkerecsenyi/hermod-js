@@ -16,9 +16,24 @@ export default class IsomorphicWebSocket {
             this.nodeWs = new NodeWebSocket(url, {
                 perMessageDeflate: false,
             })
-            this.nodeWs!.binaryType = 'arraybuffer'
-            this.nodeWs!.addEventListener("message", this.handleMessageReceive.bind(this))
+            this.nodeWs.binaryType = 'arraybuffer'
+            this.nodeWs.addEventListener("message", this.handleMessageReceive.bind(this))
+            this.nodeWs.setMaxListeners(Infinity)
         }
+    }
+
+    get ws() {
+        if (this.nodeWs) {
+            return this.nodeWs
+        } else if (this.webWs) {
+            return this.webWs
+        } else {
+            throw new Error("tried to access uninitialised websocket")
+        }
+    }
+
+    get isReady() {
+        return this.ws.readyState === 1
     }
 
     waitForConnection() {
@@ -74,58 +89,65 @@ export default class IsomorphicWebSocket {
         this.incomingMessageQueue.newMessage(e.data)
     }
 
-    private async binaryProvider(): Promise<Uint8List> {
-        const data = await this.incomingMessageQueue.next()
-        if (data instanceof ArrayBuffer) {
-            return Uint8List.fromArrayBuffer(data)
-        // a string response is usually a sign of a server-side error
-        } else if (typeof data === 'string') {
-            throw new Error(data)
+    private listenForMessages(handler: (data: Uint8List) => void): () => void {
+        return this.incomingMessageQueue.listen(rawMessage => {
+            if (rawMessage instanceof ArrayBuffer) {
+                handler(Uint8List.fromArrayBuffer(rawMessage))
+            }
+        })
+    }
+
+    private listenForErrors(handler: (error: string) => void): () => void {
+        return this.incomingMessageQueue.listen(rawMessage => {
+            if (typeof rawMessage === 'string') {
+                handler(rawMessage)
+            }
+        })
+    }
+
+    private listenForClose(handler: () => void): () => void {
+        if (this.nodeWs) {
+            this.nodeWs.addEventListener('close', handler)
+            return () => {
+                this.nodeWs!.removeEventListener('close', handler)
+            }
+        } else if (this.webWs) {
+            this.webWs.addEventListener('close', handler)
+            return () => {
+                this.webWs!.removeEventListener('close', handler)
+            }
+        } else {
+            throw new Error("no websocket")
+        }
+    }
+
+    listen(handler: (connectionOpen: boolean, data?: Uint8List, error?: string) => void): () => void {
+        if (this.ws.readyState !== 1) {
+            throw new Error("websocket not ready")
         }
 
-        throw new Error("type wasn't ArrayBuffer")
-    }
+        const messageUnsubscribe = this.listenForMessages(data => {
+            handler(true, data, undefined)
+        })
+        const errorUnsubscribe = this.listenForErrors(error => {
+            handler(true, undefined, error)
+        })
+        const closeUnsubscribe = this.listenForClose(() => {
+            handler(false)
+        })
 
-    private async textProvider(): Promise<Uint8List> {
-        const data = await this.incomingMessageQueue.next()
-        if (typeof data === 'string') {
-            return Uint8List.fromString(data)
-        }
-
-        throw new Error("type wasn't string")
-    }
-
-    private async *receive(provider: () => Promise<Uint8List>) {
-        const ws = this.nodeWs ?? this.webWs
-        if (ws === undefined) return
-        while (ws.readyState === 1) {
-            yield await provider()
-        }
-    }
-
-    async *message() {
-        yield* this.receive(this.binaryProvider.bind(this))
-    }
-
-    async *error(): AsyncGenerator<string> {
-        for await (const error of this.receive(this.textProvider)) {
-            yield error.toString()
+        return () => {
+            messageUnsubscribe()
+            errorUnsubscribe()
+            closeUnsubscribe()
         }
     }
 
     send(data: Uint8List) {
-        if (this.webWs) {
-            this.webWs.send(data.uint8Array.buffer)
-        } else if (this.nodeWs) {
-            this.nodeWs.send(data.uint8Array.buffer)
-        }
+        this.ws.send(data.uint8Array.buffer)
     }
 
     close() {
-        if (this.webWs) {
-            this.webWs.close()
-        } else if (this.nodeWs) {
-            this.nodeWs.close()
-        }
+        this.ws.close()
     }
 }

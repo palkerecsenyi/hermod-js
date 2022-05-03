@@ -156,6 +156,16 @@ export default class Uint8List {
         return newList
     }
 
+    // gets a slice of the Uint8List from _readIndex until the end
+    sliceToEnd(): Uint8List {
+        const v = this._contents.slice(this._readIndex, this._contents.length)
+        this._readIndex = this._contents.length - 1
+
+        const newList = new Uint8List()
+        newList._contents.push(...v)
+        return newList
+    }
+
     toString(): string {
         const decoder = new TextDecoder()
         return decoder.decode(this.uint8Array.buffer)
