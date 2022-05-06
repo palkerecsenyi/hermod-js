@@ -1,7 +1,8 @@
 import { Unit } from '../encoder/encoder';
 import { decodeUFHU, encodeUFHU, UserFacingHermodUnit } from '../encoder/user';
 import { GlobalServer } from './request';
-import { WebSocketRoute, WebSocketRouter } from './router'
+import type WebSocketRoute from './route'
+import type WebSocketRouter from './router'
 
 export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefined = undefined, Out extends UserFacingHermodUnit | undefined = undefined> {
     private readonly in: Unit | undefined
@@ -29,7 +30,7 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
     }
 
     private async open() {
-        if (!this.client.isOpen) {
+        if (!this.client.handshakeComplete) {
             await this.client.open()
         }
     }

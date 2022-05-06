@@ -1,24 +1,35 @@
-import NodeWebSocket from 'ws';
+import type NodeWebSocket from 'ws'
 import Uint8List from '../encoder/uint8list';
 import IncomingMessageQueue from './queue'
+import isNode from 'detect-node'
 
 // an isomorphic WebSocket provider that works both on Node.JS and web
 // uses generators for events rather than callbacks
 export default class IsomorphicWebSocket {
     private readonly nodeWs: NodeWebSocket | undefined;
     private readonly webWs: WebSocket | undefined;
+    private readonly url: string
     constructor(url: string) {
-        if (typeof window !== "undefined") {
-            this.webWs = new WebSocket(url)
-            this.webWs.binaryType = 'arraybuffer'
-            this.webWs.addEventListener("message", this.handleMessageReceive.bind(this))
-        } else {
-            this.nodeWs = new NodeWebSocket(url, {
+        this.url = url
+
+        if (isNode) {
+            // yes, this is a real thing.
+            // Webpack will try to import everything it ever sees, and this will stop it
+            // Importing ws into a browser will cause all sorts of issues
+            const WebSocket = __non_webpack_require__('ws')
+
+            this.nodeWs = new WebSocket(this.url, {
                 perMessageDeflate: false,
-            })
+            }) as NodeWebSocket
+
+            if (!this.nodeWs) return
             this.nodeWs.binaryType = 'arraybuffer'
             this.nodeWs.addEventListener("message", this.handleMessageReceive.bind(this))
             this.nodeWs.setMaxListeners(Infinity)
+        } else {
+            this.webWs = new WebSocket(this.url)
+            this.webWs.binaryType = 'arraybuffer'
+            this.webWs.addEventListener("message", this.handleMessageReceive.bind(this))
         }
     }
 

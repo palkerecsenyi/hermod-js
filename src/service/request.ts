@@ -1,4 +1,5 @@
-import { WebSocketRouter } from './router'
+import { AuthenticationEndpointId } from './route'
+import WebSocketRouter from './router'
 
 export interface Service {
     name: string
@@ -46,21 +47,34 @@ export class GlobalServer {
         this.config = newConfig
     }
 
-    static async open() {
+    static async open(token?: string) {
         if (!this.config) {
             throw new Error("GlobalServer not configured. Use GlobalConfig.set() to configure.")
         }
 
-        const finalUrl = `${this.config.secure ? 'wss' : 'ws'}://${this.config.hostname}:${this.config.port}${this.config.path}`
+        let finalUrl = `${this.config.secure ? 'wss' : 'ws'}://${this.config.hostname}:${this.config.port}${this.config.path}/`
+        if (token !== undefined) {
+            finalUrl += `?token=${token}`
+        }
+
         this.connection = new WebSocketRouter(finalUrl, this.config.timeout)
         await this.connection.waitForConnection()
     }
 
-    static close() {
+    private static ensureOpen() {
         if (!this.connection || !this.connection.webSocket.isReady) {
             throw new Error("WebSocket connection not open")
         }
+    }
 
+    static close() {
+        this.ensureOpen()
         this.connection.webSocket.close()
+    }
+
+    static async setAuth(token: string, timeout = 5000) {
+        this.ensureOpen()
+        const route = this.connection.getRoute(AuthenticationEndpointId)
+        await route.authenticate(token, timeout)
     }
 }
