@@ -57,7 +57,7 @@ export function encodeValue(field: Field, value: any): Uint8List {
 
 export function decodeValue(field: Field, data: Uint8List): any {
     if (field.repeated) {
-        let done = false
+        let done = data.readComplete
         const array: any[] = []
         while (!done) {
             const length = data.readSize(false)
