@@ -48,10 +48,12 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
         if (this.out === undefined) throw new Error("function doesn't return any arguments")
 
         await this.open()
-        const rawData = await this.client.receive().next()
+        const receiver = this.client.receive()
+        const rawData = await receiver.next()
         if (!rawData.value) {
-            throw new Error("connection got closed")
+            throw new Error("Connection got closed while waiting for next message")
         }
+        await receiver.return()
         return decodeUFHU(rawData.value, this.out) as Out
     }
 

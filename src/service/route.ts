@@ -53,7 +53,7 @@ export default class WebSocketRoute {
         this.messageQueue = new IncomingMessageQueue()
         this.cancelSubscription = this.router.webSocket.listen((open, data, error) => {
             if (!open) {
-                this.cancelSubscription()
+                this.permanentlyEndSession()
                 this.messageQueue.newMessage(false)
                 return
             }
@@ -202,12 +202,10 @@ export default class WebSocketRoute {
             throw new Error("Session has been closed, cannot receive messages")
         }
 
-        let connectionOpen = true
-        while (connectionOpen) {
+        while (true) {
             const message = await this.messageQueue.next()
             if (message === false) {
-                connectionOpen = false
-                continue
+                break
             } else if (typeof message === 'boolean') {
                 continue
             }

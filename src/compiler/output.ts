@@ -16,9 +16,8 @@ export interface Writer {
     write(text: string): void
     writeln(text: string): void
     writelni(i: number, text: string): void
-    importStar(from: string, relative: boolean, as: string): void
-    importModule(from: string, relative: boolean, ...module: string[]): void
-    importDefault(from: string, relative: boolean, name: string): void
+    importModuleRelative(from: string, ...module: string[]): void
+    importHermod(...module: string[]): void
 }
 
 export function writeFileOutput(
@@ -51,17 +50,7 @@ export function writeFileOutput(
 
             this._lines.push(indent + text)
         },
-        importStar(from: string, relative: boolean, as: string) {
-            if (!relative) {
-                from = importBase + '/' + from
-            }
-            this._imports[from] = ['*', as]
-        },
-        importModule(from: string, relative: boolean, ...module: string[]) {
-            if (!relative) {
-                from = importBase + '/' + from
-            }
-
+        importModuleRelative(from: string, ...module: string[]) {
             if (Object.keys(this._imports).includes(from)) {
                 const isStar = this._imports[from].length === 2 && this._imports[from][0] === '*'
                 if (isStar) return
@@ -74,11 +63,8 @@ export function writeFileOutput(
                 this._imports[from] = [...module];
             }
         },
-        importDefault(from: string, relative: boolean, name: string) {
-            if (!relative) {
-                from = importBase + '/' + from
-            }
-            this._imports[from] = ['__DEFAULT', name]
+        importHermod(...module: string[]) {
+            this.importModuleRelative(importBase, ...module)
         }
     }
 

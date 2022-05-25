@@ -26,7 +26,7 @@ export function writeUnitDefinition(w: Writer, unit: Unit, fileName: string, con
 export default function writeUnit(w: Writer, unit: Unit, fileName: string, configs: Config[]) {
     const unitName = camelcase(unit.name)
     const exportedUnitName = camelcase(unitName, {pascalCase: true})
-    w.importModule("dist/encoder/user", false, "UserFacingHermodUnit")
+    w.importHermod("UserFacingHermodUnit")
 
     w.writeln(`export interface ${exportedUnitName} extends UserFacingHermodUnit {`)
     for (const field of unit.fields) {
@@ -36,13 +36,13 @@ export default function writeUnit(w: Writer, unit: Unit, fileName: string, confi
     w.writeln('}')
 
     w.writeln(`export function new${exportedUnitName}(): ${exportedUnitName} {`)
-    w.importModule("dist/encoder/user", false, "initUFHU")
+    w.importHermod("initUFHU")
     w.writelni(1, `return initUFHU<${exportedUnitName}>(`)
     writeUnitDefinition(w, unit, fileName, configs)
     w.write(')')
     w.writeln('}')
 
-    w.importDefault("dist/encoder/uint8list", false, "Uint8List")
+    w.importHermod("Uint8List")
     w.writeln(`export function decode${exportedUnitName}(data: Uint8List): ${exportedUnitName} {`)
     w.writelni(1, `return new${exportedUnitName}()._decode(data)`)
     w.writeln('}')

@@ -32,7 +32,7 @@ export function resolveTypeName(
         if (native) {
             return hermodTypeToTsType(type as FieldType)
         } else {
-            w.importModule("dist/encoder/encoder", false, "FieldType")
+            w.importHermod("FieldType")
             return `'${type}' as FieldType`
         }
     } else {
@@ -49,7 +49,8 @@ export function resolveTypeName(
         }
 
         if (currentFileName !== unitFileName) {
-            w.importModule(`./${unitFileName}`, true, unitName)
+            w.importModuleRelative(`./${unitFileName}`, unitName)
+            w.importModuleRelative(`./${unitFileName}`, `new${unitName}`)
         }
 
         return unitName

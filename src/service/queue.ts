@@ -60,6 +60,7 @@ export default class IncomingMessageQueue<MessageType = any> {
 
         this.eventEmitter.addListener('message', eventHandler)
         return () => {
+            if (this.eventEmitter.listenerCount('message') === 0) return
             this.eventEmitter.removeListener('message', eventHandler)
         }
     }

@@ -29,8 +29,8 @@ export default function writeService(w: Writer, service: Service, fileName: stri
     for (const endpoint of service.endpoints) {
         const apiPathName = camelcase(endpoint.path.split('/').reverse().join('_'), {pascalCase: true})
 
-        w.importDefault('dist/service/router', false, 'WebSocketRouter')
-        w.importDefault('dist/service/readwriter', false, 'ServiceReadWriter')
+        w.importHermod('WebSocketRouter')
+        w.importHermod('ServiceReadWriter')
 
         const inTypeName = getUnitTypeName(endpoint.in, w, fileName, configs)
         const outTypeName = getUnitTypeName(endpoint.out, w, fileName, configs)
