@@ -1,6 +1,6 @@
 {
   "name": "hermod-js",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Browser and Node.js client for Hermod",
   "main": "dist/index.js",
   "repository": "https://github.com/palkerecsenyi/hermod-js",
@@ -8,6 +8,7 @@
   "license": "MIT",
   "files": [
     "dist/**/*.js",
+    "dist/**/*.d.ts",
     "bin/hermod-js"
   ],
   "bin": {
