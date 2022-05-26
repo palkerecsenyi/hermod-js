@@ -36,32 +36,35 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
     }
 
     async *read(): AsyncGenerator<Out, void, void> {
-        if (this.out === undefined) throw new Error("function doesn't return any arguments")
-
         await this.open()
         for await (const rawData of this.client.receive()) {
-            yield decodeUFHU(rawData, this.out) as Out
+            if (this.out !== undefined) {
+                yield decodeUFHU(rawData, this.out) as Out
+            }
         }
     }
 
     async readNext(): Promise<Out> {
-        if (this.out === undefined) throw new Error("function doesn't return any arguments")
+        if (this.out === undefined) throw new Error("function doesn't return any arguments. use read() instead.")
 
         await this.open()
         const receiver = this.client.receive()
         const rawData = await receiver.next()
-        if (!rawData.value) {
+        if (rawData.value === undefined) {
             throw new Error("Connection got closed while waiting for next message")
         }
         await receiver.return()
+
         return decodeUFHU(rawData.value, this.out) as Out
     }
 
     async send(data: In): Promise<void> {
-        if (this.in === undefined) throw new Error("function doesn't take any arguments")
+        if (this.in === undefined && data !== undefined) throw new Error("function doesn't take any arguments")
 
         await this.open()
-        const encodedData = encodeUFHU(data as UserFacingHermodUnit, this.in)
-        this.client.send(encodedData)
+        if (this.in !== undefined && data !== undefined) {
+            const encodedData = encodeUFHU(data as UserFacingHermodUnit, this.in)
+            this.client.send(encodedData)
+        }
     }
 }

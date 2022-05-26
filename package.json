@@ -1,6 +1,6 @@
 {
   "name": "hermod-js",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Browser and Node.js client for Hermod",
   "main": "dist/index.js",
   "repository": "https://github.com/palkerecsenyi/hermod-js",
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "build-compile": "tsc && node dist/compiler/compiler.js"
+    "build-compile": "tsc && node dist/compiler/compiler.js",
+    "prepublishOnly": "tsc"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",
