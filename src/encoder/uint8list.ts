@@ -116,9 +116,9 @@ export default class Uint8List {
         const b = new DataView(new Uint8Array(slice).buffer)
         let v: number
         switch (n) {
-            case 16: v = b.getUint16(0); break
-            case 32: v = b.getUint32(0); break
-            case 64: v = Number(b.getBigUint64(0)); break
+            case 16: v = b.getUint16(0, false); break
+            case 32: v = b.getUint32(0, false); break
+            case 64: v = Number(b.getBigUint64(0, false)); break
         }
         this._readIndex += n / 8
         return v

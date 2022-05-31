@@ -31,15 +31,19 @@ export function encodeValue(field: Field, value: any): Uint8List {
             }
             return u
         case FieldType.TinyInteger:
+        case FieldType.TinySignedInteger:
             u.push8(value)
             return u
         case FieldType.SmallInteger:
+        case FieldType.SmallSignedInteger:
             u.push16(value)
             return u
         case FieldType.Integer:
+        case FieldType.SignedInteger:
             u.push32(value)
             return u
         case FieldType.BigInteger:
+        case FieldType.BigSignedInteger:
             u.push64(value)
             return u
     }
@@ -84,6 +88,11 @@ export function decodeValue(field: Field, data: Uint8List): any {
             return data.read32()
         case FieldType.BigInteger:
             return data.read64()
+        case FieldType.TinySignedInteger:
+        case FieldType.SmallSignedInteger:
+        case FieldType.SignedInteger:
+        case FieldType.BigSignedInteger:
+            throw new Error("decoding signed integers is not yet implemented")
     }
 
     if (isOtherUnit(field.type)) {
