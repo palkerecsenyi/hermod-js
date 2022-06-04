@@ -45,7 +45,7 @@ export function resolveTypeName(
         }
 
         if (!native) {
-            return `new${unitName}()`;
+            return `new${unitName}`;
         }
 
         if (currentFileName !== unitFileName) {

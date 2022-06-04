@@ -2,6 +2,10 @@ import { Field, FieldType } from './encoder';
 import Uint8List from './uint8list';
 import { UserFacingHermodUnit } from './user';
 
+function isOtherUnitGenerator(v: any): v is () => UserFacingHermodUnit {
+    return typeof v === "function" && v().__HERMOD
+}
+
 function isOtherUnit(v: any): v is UserFacingHermodUnit {
     return v.__HERMOD
 }
@@ -95,8 +99,8 @@ export function decodeValue(field: Field, data: Uint8List): any {
             throw new Error("decoding signed integers is not yet implemented")
     }
 
-    if (isOtherUnit(field.type)) {
-        return field.type._decode(data)
+    if (isOtherUnitGenerator(field.type)) {
+        return field.type()._decode(data)
     } else {
         throw new Error(`couldn't find a matching type for field ${field.name}`)
     }

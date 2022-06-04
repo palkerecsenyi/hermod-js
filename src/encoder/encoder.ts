@@ -15,7 +15,7 @@ export enum FieldType {
     BigSignedInteger = 'bigsignedinteger',
 }
 
-export type TypeIdentifier = FieldType | UserFacingHermodUnit
+export type TypeIdentifier = FieldType | (() => UserFacingHermodUnit)
 
 export interface Field {
     id: number
