@@ -4,6 +4,13 @@ import { GlobalServer } from './request';
 import type WebSocketRoute from './route'
 import type WebSocketRouter from './router'
 
+/**
+ * ServiceReadWriter is the way to interact with a high-level request to a particular Hermod endpoint. The three main
+ * provided functions are send(), read(), and readNext().
+ *
+ * When instantiating ServiceReadWriter, the handshake process won't be started and the session won't be opened.
+ * However, this is done automatically when calling any of send(), read(), or readNext().
+ */
 export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefined = undefined, Out extends UserFacingHermodUnit | undefined = undefined> {
     private readonly in: Unit | undefined
     private readonly out: Unit | undefined
@@ -29,7 +36,11 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
         this.client.close()
     }
 
-    private async open() {
+    /**
+     * If a handshake hasn't already been completed, perform one now. Returns a Promise that resolves when the handshake
+     * has successfully completed and rejects if it times out (based on router.connectionTimeout).
+     */
+    async open() {
         if (!this.client.handshakeComplete) {
             await this.client.open()
         }
