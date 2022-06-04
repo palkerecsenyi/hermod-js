@@ -51,15 +51,11 @@ export default class WebSocketRoute {
         }
 
         this.messageQueue = new IncomingMessageQueue()
-        this.cancelSubscription = this.router.webSocket.listen((open, data, error) => {
+        this.cancelSubscription = this.router.webSocket.listen((open, data) => {
             if (!open) {
                 this.permanentlyEndSession()
                 this.messageQueue.newMessage(false)
                 return
-            }
-
-            if (error) {
-                throw new Error(error)
             }
 
             if (data) {

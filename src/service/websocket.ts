@@ -3,12 +3,20 @@ import Uint8List from '../encoder/uint8list';
 import IncomingMessageQueue from './queue'
 import isNode from 'detect-node'
 
+export enum WebSocketState {
+    Connecting,
+    Ready,
+    Closing,
+    Closed,
+}
+
 // an isomorphic WebSocket provider that works both on Node.JS and web
 // uses generators for events rather than callbacks
 export default class IsomorphicWebSocket {
-    private readonly nodeWs: NodeWebSocket | undefined;
-    private readonly webWs: WebSocket | undefined;
+    private readonly nodeWs: NodeWebSocket | undefined
+    private readonly webWs: WebSocket | undefined
     private readonly url: string
+    private readonly cancelErrorListener: () => void
     constructor(url: string) {
         this.url = url
 
@@ -22,7 +30,6 @@ export default class IsomorphicWebSocket {
                 perMessageDeflate: false,
             }) as NodeWebSocket
 
-            if (!this.nodeWs) return
             this.nodeWs.binaryType = 'arraybuffer'
             this.nodeWs.addEventListener("message", this.handleMessageReceive.bind(this))
             this.nodeWs.setMaxListeners(Infinity)
@@ -31,6 +38,11 @@ export default class IsomorphicWebSocket {
             this.webWs.binaryType = 'arraybuffer'
             this.webWs.addEventListener("message", this.handleMessageReceive.bind(this))
         }
+
+        // automatically close the WebSocket when an error occurs
+        this.cancelErrorListener = this.listenForErrors(() => {
+            this.close()
+        })
     }
 
     get ws() {
@@ -44,7 +56,7 @@ export default class IsomorphicWebSocket {
     }
 
     get isReady() {
-        return this.ws.readyState === 1
+        return this.ws.readyState === WebSocketState.Ready
     }
 
     waitForConnection() {
@@ -74,10 +86,10 @@ export default class IsomorphicWebSocket {
             }
 
             if (this.webWs) {
-                if (this.webWs.readyState === 1) {
+                if (this.webWs.readyState === WebSocketState.Ready) {
                     resolve()
                     return
-                } else if (this.webWs.readyState === 3) {
+                } else if (this.webWs.readyState === WebSocketState.Closed) {
                     reject(new Error("WebSocket is closed"))
                     return
                 }
@@ -85,10 +97,10 @@ export default class IsomorphicWebSocket {
                 this.webWs.addEventListener("open", successHandler)
                 this.webWs.addEventListener("error", failHandler)
             } else if (this.nodeWs) {
-                if (this.nodeWs.readyState === 1) {
+                if (this.nodeWs.readyState === WebSocketState.Ready) {
                     resolve()
                     return
-                } else if (this.nodeWs.readyState === 3) {
+                } else if (this.nodeWs.readyState === WebSocketState.Closed) {
                     reject(new Error("WebSocket is closed"))
                     return
                 }
@@ -137,15 +149,18 @@ export default class IsomorphicWebSocket {
     }
 
     listen(handler: (connectionOpen: boolean, data?: Uint8List, error?: string) => void): () => void {
-        if (this.ws.readyState !== 1) {
+        if (this.ws.readyState !== WebSocketState.Ready) {
             throw new Error("websocket not ready")
         }
 
         const messageUnsubscribe = this.listenForMessages(data => {
-            handler(true, data, undefined)
+            handler(true, data)
         })
         const errorUnsubscribe = this.listenForErrors(error => {
-            handler(true, undefined, error)
+            // connectionOpen = uncertain, as the listenForErrors() called in the constructor may have taken precedence
+            // and already closed the connection. If not, another call to handler() will be made after this one when
+            // the listenForClose() handler is called.
+            handler(this.ws.readyState === WebSocketState.Ready, undefined, error)
         })
         const closeUnsubscribe = this.listenForClose(() => {
             handler(false)
@@ -164,5 +179,6 @@ export default class IsomorphicWebSocket {
 
     close() {
         this.ws.close()
+        this.cancelErrorListener()
     }
 }
