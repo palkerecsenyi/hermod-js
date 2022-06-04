@@ -1,5 +1,5 @@
 import IsomorphicWebSocket from './websocket';
-import WebSocketRoute from './route';
+import WebSocketRoute, { AuthenticationEndpointId } from './route';
 
 type CancelHandler = () => void
 
@@ -57,7 +57,7 @@ export default class WebSocketRouter {
         }
 
         this.webSocket = new IsomorphicWebSocket(finalUrl)
-        this.connectionTimeout = config.timeout
+        this.connectionTimeout = config.timeout ?? 5000
     }
 
     /**
@@ -68,6 +68,12 @@ export default class WebSocketRouter {
         await this.webSocket.waitForConnection()
     }
 
+    private checkOpen() {
+        if (!this.webSocket.isReady) {
+            throw new Error("WebSocket connection not ready")
+        }
+    }
+
     /**
      * Gets an instance of WebSocketRoute corresponding to the specified endpoint ID. This will automatically start
      * listening for messages and add them to a queue, which will start being dequeued from once the route has at least
@@ -75,10 +81,20 @@ export default class WebSocketRouter {
      * @param id
      */
     getRoute(id: number) {
-        if (!this.webSocket.isReady) {
-            throw new Error("tried opening a session without an initialised WebSocket connection")
-        }
+        this.checkOpen()
         return new WebSocketRoute(this, id)
+    }
+
+    /**
+     * Sends an authentication request to the server. An alternative to passing the token as a parameter to the constructor.
+     * Calling when the WebSocket connection is not open (IsomorphicWebSocket.isReady) will throw an error.
+     * @param token
+     * @param timeout - Can optionally be specified to override connectionTimeout
+     */
+    async setAuth(token: string, timeout?: number) {
+        this.checkOpen()
+        const route = this.getRoute(AuthenticationEndpointId)
+        await route.authenticate(token, timeout ?? this.connectionTimeout)
     }
 
     /**

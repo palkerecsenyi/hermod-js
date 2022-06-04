@@ -1,4 +1,3 @@
-import { AuthenticationEndpointId } from './route'
 import WebSocketRouter, { ServerConfig } from './router';
 
 export interface Service {
@@ -51,7 +50,6 @@ export class GlobalServer {
 
     static async setAuth(token: string, timeout = 5000) {
         this.ensureOpen()
-        const route = this.connection.getRoute(AuthenticationEndpointId)
-        await route.authenticate(token, timeout)
+        await this.connection.setAuth(token, timeout)
     }
 }
