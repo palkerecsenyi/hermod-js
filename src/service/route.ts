@@ -138,7 +138,11 @@ export default class WebSocketRoute {
         try {
             response = await runWithTimeout(this.receiveSessionAcknowledgement(), this.router.connectionTimeout)
         } catch (e) {
-            throw new Error("Session establishment timed out")
+            if (e instanceof TimeoutError) {
+                throw new Error("Session establishment timed out")
+            } else {
+                throw e
+            }
         }
 
         const usedIdIndex = WebSocketRoute.usedClientIds.indexOf(this.clientId)
