@@ -9,11 +9,10 @@ enum MessageFlags {
     ClientSessionRequest = 1,
     ServerSessionAck = 2,
     Close = 3,
-    CloseAck = 4,
-    ErrorClientID = 5,
-    ErrorSessionID = 6,
-    Authentication = 7,
-    AuthenticationAck = 8,
+    ErrorClientID = 4,
+    ErrorSessionID = 5,
+    Authentication = 6,
+    AuthenticationAck = 7,
 }
 
 export const AuthenticationEndpointId = 0xffff
@@ -253,17 +252,7 @@ export default class WebSocketRoute {
             }
 
             if (requestFlag === MessageFlags.Close) {
-                const acknowledgementMessage = new Uint8List()
-                acknowledgementMessage.push16(this.endpointId)
-                acknowledgementMessage.push8(MessageFlags.CloseAck)
-                acknowledgementMessage.push32(this.sessionId)
-                this.router.webSocket.send(acknowledgementMessage)
-
                 this.permanentlyEndSession()
-                break
-            }
-
-            if (requestFlag === MessageFlags.CloseAck) {
                 break
             }
 
@@ -287,5 +276,6 @@ export default class WebSocketRoute {
         this.router.webSocket.send(emptyMessageFrameList)
 
         this.permanentlyEndSession()
+        this.messageQueue.newMessage(false)
     }
 }
