@@ -1,6 +1,6 @@
 import type NodeWebSocket from 'ws'
-import Uint8List from '../encoder/uint8list';
-import IncomingMessageQueue from './queue'
+import Uint8List from '../encoder/uint8list.js'
+import IncomingMessageQueue from './queue.js'
 import isNode from 'detect-node'
 
 export enum WebSocketState {
@@ -24,7 +24,8 @@ export default class IsomorphicWebSocket {
             // yes, this is a real thing.
             // Webpack will try to import everything it ever sees, and this will stop it
             // Importing ws into a browser will cause all sorts of issues
-            const WebSocket = __non_webpack_require__('ws')
+            const requireFunction = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+            const WebSocket = requireFunction('ws')
 
             this.nodeWs = new WebSocket(this.url, {
                 perMessageDeflate: false,

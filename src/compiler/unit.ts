@@ -1,8 +1,8 @@
-import { Writer } from './output';
-import { Config } from './parser';
-import { Unit } from '../encoder/encoder';
-import camelcase from 'camelcase';
-import { resolveTypeName } from './types';
+import { Writer } from './output.js'
+import { Config } from './parser.js'
+import { Unit } from '../encoder/encoder.js'
+import camelcase from 'camelcase'
+import { resolveTypeName } from './types.js'
 
 export function writeUnitDefinition(w: Writer, unit: Unit, fileName: string, configs: Config[]) {
     w.write('{')

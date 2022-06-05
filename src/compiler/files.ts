@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import path from 'path'
-import parseYamlFile from './parser'
-import { writeFileOutput } from './output';
+import parseYamlFile from './parser.js'
+import { writeFileOutput } from './output.js';
 
 export interface file {
     path: string

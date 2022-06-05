@@ -1,6 +1,6 @@
-import { FieldType, TypeIdentifier } from './encoder';
-import { UserFacingHermodUnit } from './user';
-import Uint8List from './uint8list';
+import { FieldType, TypeIdentifier } from './encoder.js';
+import { UserFacingHermodUnit } from './user.js';
+import Uint8List from './uint8list.js';
 
 export function getDefaultValueForType(type?: TypeIdentifier): any {
     switch (type) {

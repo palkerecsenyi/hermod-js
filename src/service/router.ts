@@ -1,5 +1,5 @@
-import IsomorphicWebSocket from './websocket';
-import WebSocketRoute, { AuthenticationEndpointId } from './route';
+import IsomorphicWebSocket from './websocket.js';
+import WebSocketRoute, { AuthenticationEndpointId } from './route.js';
 
 type CancelHandler = () => void
 

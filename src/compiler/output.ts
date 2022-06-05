@@ -1,10 +1,10 @@
-import { file } from "./files"
-import { Config } from './parser'
-import writeUnit from './unit';
-import * as fs from 'fs';
-import path from 'path';
+import { file } from './files.js'
+import { Config } from './parser.js'
+import writeUnit from './unit.js'
+import * as fs from 'fs'
+import path from 'path'
 import typescript from 'typescript'
-import writeService from './service';
+import writeService from './service.js'
 
 const { createProgram, ModuleKind, ScriptTarget } = typescript
 

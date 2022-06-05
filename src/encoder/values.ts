@@ -1,6 +1,6 @@
-import { Field, FieldType } from './encoder';
-import Uint8List from './uint8list';
-import { UserFacingHermodUnit } from './user';
+import { Field, FieldType } from './encoder.js';
+import Uint8List from './uint8list.js';
+import { UserFacingHermodUnit } from './user.js';
 
 function isOtherUnitGenerator(v: any): v is () => UserFacingHermodUnit {
     return typeof v === "function" && v().__HERMOD

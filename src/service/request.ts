@@ -1,4 +1,4 @@
-import WebSocketRouter, { ServerConfig } from './router';
+import WebSocketRouter, { ServerConfig } from './router.js';
 
 export interface Service {
     name: string

@@ -1,9 +1,9 @@
-import { Writer } from './output';
-import { EndpointArgument, Service } from '../service/request';
-import { Config } from './parser';
-import camelcase from 'camelcase';
-import { resolveTypeName, resolveUnitDefinition } from './types';
-import { writeUnitDefinition } from './unit';
+import { Writer } from './output.js'
+import { EndpointArgument, Service } from '../service/request.js'
+import { Config } from './parser.js'
+import camelcase from 'camelcase'
+import { resolveTypeName, resolveUnitDefinition } from './types.js'
+import { writeUnitDefinition } from './unit.js'
 
 function getUnitTypeName(endpointArgument: EndpointArgument | undefined, w: Writer, fileName: string, configs: Config[]): string {
     if (!endpointArgument) {

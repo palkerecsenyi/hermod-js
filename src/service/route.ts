@@ -1,8 +1,8 @@
-import Uint8List from '../encoder/uint8list'
-import IncomingMessageQueue from './queue'
+import Uint8List from '../encoder/uint8list.js'
+import IncomingMessageQueue from './queue.js'
 import { sha256 } from 'sha.js'
-import { runWithTimeout, TimeoutError } from './timeout'
-import type WebSocketRouter from './router'
+import { runWithTimeout, TimeoutError } from './timeout.js'
+import type WebSocketRouter from './router.js'
 
 enum MessageFlags {
     Data = 0,

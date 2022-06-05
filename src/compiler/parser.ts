@@ -1,9 +1,9 @@
-import { file } from './files'
+import { file } from './files.js'
 import YAML from 'yaml'
 import * as fs from 'fs'
 import path from 'path'
-import { Unit } from '../encoder/encoder';
-import { Service } from '../service/request';
+import { Unit } from '../encoder/encoder.js';
+import { Service } from '../service/request.js';
 
 export interface Config {
     fileName: string // only defined during compilation

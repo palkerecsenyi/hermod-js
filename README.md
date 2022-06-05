@@ -4,17 +4,17 @@ A browser and Node.JS client library for the [Hermod server](https://github.com/
 
 ## Installation
 ```bash
-yarn add hermod-js
+yarn add hermod-js.js
 ```
 ```bash
-npm install hermod-js
+npm install hermod-js.js
 ```
 
 ## Compiling code
 Using the [same YAML spec](https://github.com/palkerecsenyi/hermod/blob/main/YAML.md) as the Hermod server, you can create files that work with Hermod JS. The NPM module is bundled with a compiler:
 
 ```bash
-hermod-js --help
+hermod-js.js --help
 ```
 
 ## License

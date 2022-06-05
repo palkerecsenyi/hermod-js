@@ -1,7 +1,7 @@
-import Uint8List from './uint8list';
-import { decode, encode, FilledUnit, Unit } from './encoder';
+import Uint8List from './uint8list.js';
+import { decode, encode, FilledUnit, Unit } from './encoder.js';
 import camelcase from 'camelcase';
-import { getDefaultValueForType } from './types';
+import { getDefaultValueForType } from './types.js';
 
 export interface UserFacingHermodUnit {
     __HERMOD: true

@@ -1,8 +1,8 @@
-import { Unit } from '../encoder/encoder';
-import { decodeUFHU, encodeUFHU, UserFacingHermodUnit } from '../encoder/user';
-import { GlobalServer } from './request';
-import type WebSocketRoute from './route'
-import type WebSocketRouter from './router'
+import { Unit } from '../encoder/encoder.js';
+import { decodeUFHU, encodeUFHU, UserFacingHermodUnit } from '../encoder/user.js';
+import { GlobalServer } from './request.js';
+import type WebSocketRoute from './route.js'
+import type WebSocketRouter from './router.js'
 
 /**
  * ServiceReadWriter is the way to interact with a high-level request to a particular Hermod endpoint. The three main

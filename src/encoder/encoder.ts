@@ -1,6 +1,6 @@
-import Uint8List from './uint8list';
-import { decodeValue, encodeValue } from './values';
-import { UserFacingHermodUnit } from './user';
+import Uint8List from './uint8list.js';
+import { decodeValue, encodeValue } from './values.js';
+import { UserFacingHermodUnit } from './user.js';
 
 export enum FieldType {
     String = 'string',

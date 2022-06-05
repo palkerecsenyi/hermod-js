@@ -1,9 +1,9 @@
-import { FieldType } from './encoder/encoder'
-import Uint8List from './encoder/uint8list'
-import { initUFHU, UserFacingHermodUnit } from './encoder/user'
-import ServiceReadWriter from './service/readwriter'
-import { GlobalServer } from './service/request'
-import WebSocketRouter, { ServerConfig } from './service/router'
+import { FieldType } from './encoder/encoder.js'
+import Uint8List from './encoder/uint8list.js'
+import { initUFHU, UserFacingHermodUnit } from './encoder/user.js'
+import ServiceReadWriter from './service/readwriter.js'
+import { GlobalServer } from './service/request.js'
+import WebSocketRouter, { ServerConfig } from './service/router.js'
 
 export {
     GlobalServer as HermodServer,

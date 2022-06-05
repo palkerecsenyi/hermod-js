@@ -1,18 +1,23 @@
 {
   "name": "hermod-js",
-  "version": "0.7.0",
+  "version": "0.8.0",
+  "type": "module",
   "description": "Browser and Node.js client for Hermod",
-  "main": "dist/index.js",
+  "exports": "./dist/index.js",
+  "main": "./dist/index.js",
   "repository": "https://github.com/palkerecsenyi/hermod-js",
   "author": "Pal Kerecsenyi",
   "license": "MIT",
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
-    "bin/hermod-js"
+    "bin/hermod-js.js"
   ],
+  "engines": {
+    "node": ">=14.16"
+  },
   "bin": {
-    "hermod-js": "./bin/hermod-js"
+    "hermod-js": "bin/hermod-js.js"
   },
   "scripts": {
     "build": "tsc",

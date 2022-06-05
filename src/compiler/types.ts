@@ -1,8 +1,8 @@
-import { FieldType, Unit } from '../encoder/encoder';
-import { Config } from './parser';
-import { Writer } from './output';
-import camelcase from 'camelcase';
-import { isNumeric } from '../encoder/types';
+import { FieldType, Unit } from '../encoder/encoder.js'
+import { Config } from './parser.js'
+import { Writer } from './output.js'
+import camelcase from 'camelcase'
+import { isNumeric } from '../encoder/types.js'
 
 export function hermodTypeToTsType(t: FieldType): string {
     switch (t) {
