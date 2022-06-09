@@ -79,10 +79,12 @@ export default class WebSocketRouter {
      * listening for messages and add them to a queue, which will start being dequeued from once the route has at least
      * one listener.
      * @param id
+     * @param token A token to use specifically for this single instance of this route. Overrides any existing tokens
+     * higher-up (connection-wide tokens)
      */
-    getRoute(id: number) {
+    getRoute(id: number, token?: string) {
         this.checkOpen()
-        return new WebSocketRoute(this, id)
+        return new WebSocketRoute(this, id, token)
     }
 
     /**

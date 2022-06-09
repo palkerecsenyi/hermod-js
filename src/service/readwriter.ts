@@ -18,6 +18,7 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
     constructor(
         id: number,
         router?: WebSocketRouter,
+        token?: string,
         inDefinition?: Unit,
         outDefinition?: Unit,
     ) {

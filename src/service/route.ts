@@ -7,6 +7,7 @@ import type WebSocketRouter from './router.js'
 enum MessageFlags {
     Data = 0,
     ClientSessionRequest = 1,
+    ClientSessionRequestWithAuth = 0b10000001,
     ServerSessionAck = 2,
     Close = 3,
     ErrorClientID = 4,
@@ -19,14 +20,16 @@ export const AuthenticationEndpointId = 0xffff
 
 export default class WebSocketRoute {
     private readonly router: WebSocketRouter
+    private readonly token?: string
     private readonly endpointId: number
     private sessionId: number | undefined
     private readonly clientId: number
     private static usedClientIds: number[] = []
     private readonly messageQueue: IncomingMessageQueue<Uint8List | boolean>
     private readonly cancelSubscription: () => void
-    constructor(router: WebSocketRouter, id: number) {
+    constructor(router: WebSocketRouter, id: number, token?: string) {
         this.router = router
+        this.token = token
 
         // id must be an unsigned 16-bit number
         if (id > 65535 || id < 0) {
@@ -129,8 +132,18 @@ export default class WebSocketRoute {
 
         const openMessageList = new Uint8List()
         openMessageList.push16(this.endpointId)
-        openMessageList.push8(MessageFlags.ClientSessionRequest)
+
+        if (this.token) {
+            openMessageList.push8(MessageFlags.ClientSessionRequestWithAuth)
+        } else {
+            openMessageList.push8(MessageFlags.ClientSessionRequest)
+        }
+
         openMessageList.push32(this.clientId)
+        if (this.token) {
+            openMessageList.pushString(this.token)
+        }
+
         this.router.webSocket.send(openMessageList)
 
         let response: number

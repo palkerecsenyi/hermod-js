@@ -34,8 +34,8 @@ export default function writeService(w: Writer, service: Service, fileName: stri
 
         const inTypeName = getUnitTypeName(endpoint.in, w, fileName, configs)
         const outTypeName = getUnitTypeName(endpoint.out, w, fileName, configs)
-        w.writeln(`export function request${apiPathName}(router?: WebSocketRouter): ServiceReadWriter<${inTypeName}, ${outTypeName}> {`)
-        w.writelni(1, `return new ServiceReadWriter<${inTypeName}, ${outTypeName}>(${endpoint.id}, router, `)
+        w.writeln(`export function request${apiPathName}(router?: WebSocketRouter, token?: string): ServiceReadWriter<${inTypeName}, ${outTypeName}> {`)
+        w.writelni(1, `return new ServiceReadWriter<${inTypeName}, ${outTypeName}>(${endpoint.id}, router, token, `)
         writeNullableUnitDefinition(w, endpoint.in, configs, fileName)
         w.write(',')
         writeNullableUnitDefinition(w, endpoint.out, configs, fileName)
