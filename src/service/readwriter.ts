@@ -30,7 +30,7 @@ export default class ServiceReadWriter<In extends UserFacingHermodUnit | undefin
         }
 
         const selectedRouter = router ?? GlobalServer.connection
-        this.client = selectedRouter.getRoute(id)
+        this.client = selectedRouter.getRoute(id, token)
     }
 
     close() {

@@ -1,6 +1,6 @@
 {
   "name": "hermod-js",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "type": "module",
   "description": "Browser and Node.js client for Hermod",
   "exports": "./dist/index.js",

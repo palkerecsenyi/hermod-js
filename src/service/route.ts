@@ -133,14 +133,14 @@ export default class WebSocketRoute {
         const openMessageList = new Uint8List()
         openMessageList.push16(this.endpointId)
 
-        if (this.token) {
+        if (this.token !== undefined) {
             openMessageList.push8(MessageFlags.ClientSessionRequestWithAuth)
         } else {
             openMessageList.push8(MessageFlags.ClientSessionRequest)
         }
 
         openMessageList.push32(this.clientId)
-        if (this.token) {
+        if (this.token !== undefined) {
             openMessageList.pushString(this.token)
         }
 
@@ -228,6 +228,19 @@ export default class WebSocketRoute {
             }
 
             const requestFlag = message.read8()
+            if (requestFlag === MessageFlags.ErrorClientID || requestFlag === MessageFlags.ErrorSessionID) {
+                const sessionOrClientId = message.read32()
+                if (requestFlag === MessageFlags.ErrorClientID && this.clientId !== sessionOrClientId) {
+                    continue
+                }
+                if (requestFlag === MessageFlags.ErrorSessionID && this.sessionId !== sessionOrClientId) {
+                    continue
+                }
+
+                const errorMessage = message.sliceToEnd().toString()
+                throw new Error("ServerError: " + errorMessage)
+            }
+
             if (requestFlag === MessageFlags.ServerSessionAck) {
                 if (sessionAcknowledgements) {
                     yield message
@@ -244,19 +257,6 @@ export default class WebSocketRoute {
                 } else {
                     continue
                 }
-            }
-
-            if (requestFlag === MessageFlags.ErrorClientID || requestFlag === MessageFlags.ErrorSessionID) {
-                const sessionOrClientId = message.read32()
-                if (requestFlag === MessageFlags.ErrorClientID && this.clientId !== sessionOrClientId) {
-                    continue
-                }
-                if (requestFlag === MessageFlags.ErrorSessionID && this.sessionId !== sessionOrClientId) {
-                    continue
-                }
-
-                const errorMessage = message.sliceToEnd().toString()
-                throw new Error("ServerError: " + errorMessage)
             }
 
             const sessionId = message.read32()
